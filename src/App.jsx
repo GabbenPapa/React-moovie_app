@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import "./App.css";
 
@@ -192,9 +192,20 @@ function WatchedMovie({ movie }) {
   );
 }
 
+const API_KEY = "47c60472";
+
 export default function App() {
-  const [movies, setMovies] = useState(tempMovieData);
-  const [watched, setWatched] = useState(tempWatchedData);
+  const [movies, setMovies] = useState([]);
+  const [watched, setWatched] = useState([]);
+
+  useEffect(() => {
+    fetch(`http://www.omdbapi.com/?apikey=${API_KEY}&s=batman`)
+      .then((res) => res.json())
+      .then((data) => {
+        // console.log(data);
+        setMovies(data.Search);
+      });
+  }, []);
 
   return (
     <>

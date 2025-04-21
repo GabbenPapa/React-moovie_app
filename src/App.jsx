@@ -56,6 +56,25 @@ function Navbar({ children }) {
   return <nav className="nav-bar">{children}</nav>;
 }
 
+function Loader() {
+  return (
+    <div className="loader">
+      <span role="img" aria-label="Loading">
+        ⏳
+      </span>
+      <p>Loading...</p>
+    </div>
+  );
+}
+
+function ErrorMSG({ message }) {
+  return (
+    <p className="error">
+      <span>⛔️</span> {message}
+    </p>
+  );
+}
+
 function Logo() {
   return (
     <div className="logo">
@@ -197,14 +216,36 @@ const API_KEY = "47c60472";
 export default function App() {
   const [movies, setMovies] = useState([]);
   const [watched, setWatched] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const query = "batman";
 
-  useEffect(() => {
-    fetch(`http://www.omdbapi.com/?apikey=${API_KEY}&s=batman`)
-      .then((res) => res.json())
-      .then((data) => {
-        // console.log(data);
+  useEffect(function () {
+    async function fetchMovies() {
+      try {
+        setLoading(true);
+        setError("");
+        const res = await fetch(
+          `http://www.omdbapi.com/?apikey=${API_KEY}&s=${query}`
+        );
+
+        if (!res.ok) {
+          throw new Error("Something went wrong");
+        }
+
+        const data = await res.json();
+        if (data.Response === "False") {
+          throw new Error("Movie not found");
+        }
         setMovies(data.Search);
-      });
+      } catch (err) {
+        console.error(err.message);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchMovies();
   }, []);
 
   return (
@@ -215,7 +256,16 @@ export default function App() {
         <NumResults movies={movies} />
       </Navbar>
       <Main>
-        <Box elements={<MovieList movies={movies} />} />
+        <Box
+          elements={
+            <>
+              {loading && <Loader />}
+              {!loading && !error && <MovieList movies={movies} />}
+              {error && <ErrorMSG message={error} />}
+            </>
+          }
+        />
+
         <Box
           elements={
             <>

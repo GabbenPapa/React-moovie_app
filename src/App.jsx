@@ -74,19 +74,19 @@ function Box({ elements }) {
   );
 }
 
-function MovieList({ movies }) {
+function MovieList({ movies, onSelectMovie }) {
   return (
     <ul className="list">
       {movies?.map((movie) => (
-        <Movie key={movie.imdbID} movie={movie} />
+        <Movie key={movie.imdbID} movie={movie} onSelectMovie={onSelectMovie} />
       ))}
     </ul>
   );
 }
 
-function Movie({ movie }) {
+function Movie({ movie, onSelectMovie }) {
   return (
-    <li key={movie.imdbID}>
+    <li key={movie.imdbID} onClick={() => onSelectMovie(movie.imdbID)}>
       <img src={movie.Poster} alt={`${movie.Title} poster`} />
       <h3>{movie.Title}</h3>
       <div>
@@ -96,6 +96,18 @@ function Movie({ movie }) {
         </p>
       </div>
     </li>
+  );
+}
+
+function MovieDetails({ selecedId, onCloseDetails }) {
+  return (
+    <div className="details">
+      <button className="btn-back" onClick={onCloseDetails}>
+        &larr;
+      </button>
+
+      {selecedId}
+    </div>
   );
 }
 
@@ -164,12 +176,20 @@ function WatchedMovie({ movie }) {
 
 const API_KEY = "47c60472";
 export default function App() {
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState("inception");
   const [movies, setMovies] = useState([]);
   const [watched, setWatched] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [selecedId, setSelectedId] = useState(null);
   // const tempQuery = "batman";
+  function handleSelectedMovie(id) {
+    setSelectedId((selecedId) => (id === selecedId ? null : id));
+  }
+
+  function handleCloseDetails() {
+    setSelectedId(null);
+  }
 
   useEffect(
     function () {
@@ -219,7 +239,12 @@ export default function App() {
           elements={
             <>
               {loading && <Loader />}
-              {!loading && !error && <MovieList movies={movies} />}
+              {!loading && !error && (
+                <MovieList
+                  movies={movies}
+                  onSelectMovie={handleSelectedMovie}
+                />
+              )}
               {error && <ErrorMSG message={error} />}
             </>
           }
@@ -227,10 +252,17 @@ export default function App() {
 
         <Box
           elements={
-            <>
-              <WatchedSummary watched={watched} />
-              <WatchedMovieList watched={watched} />
-            </>
+            selecedId ? (
+              <MovieDetails
+                selecedId={selecedId}
+                onCloseDetails={handleCloseDetails}
+              />
+            ) : (
+              <>
+                <WatchedSummary watched={watched} />
+                <WatchedMovieList watched={watched} />
+              </>
+            )
           }
         />
       </Main>

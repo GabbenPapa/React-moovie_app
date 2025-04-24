@@ -152,6 +152,18 @@ function MovieDetails({ selectedId, onCloseDetails, onAddWatched, watched }) {
     [selectedId]
   );
 
+  useEffect(
+    function () {
+      if (!title) return;
+      document.title = `Movies | ${title}`;
+
+      return function () {
+        document.title = "Movies";
+      };
+    },
+    [title]
+  );
+
   return (
     <div className="details">
       {loading ? (
@@ -317,12 +329,15 @@ export default function App() {
 
   useEffect(
     function () {
+      const abortController = new AbortController();
+
       async function fetchMovies() {
         try {
           setLoading(true);
           setError("");
           const res = await fetch(
-            `http://www.omdbapi.com/?apikey=${API_KEY}&s=${query}`
+            `http://www.omdbapi.com/?apikey=${API_KEY}&s=${query}`,
+            { signal: abortController.signal }
           );
 
           if (!res.ok) {
@@ -334,9 +349,11 @@ export default function App() {
             throw new Error("Movie not found");
           }
           setMovies(data.Search);
+          setError("");
         } catch (err) {
-          console.error(err.message);
-          setError(err.message);
+          if (err.name === "AbortError") {
+            setError(err.message);
+          }
         } finally {
           setLoading(false);
         }
@@ -347,6 +364,10 @@ export default function App() {
         return;
       }
       fetchMovies();
+
+      return function () {
+        abortController.abort();
+      };
     },
     [query]
   );

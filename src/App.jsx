@@ -43,7 +43,7 @@ function Search({ query, setQuery }) {
     <input
       className="search"
       type="text"
-      placeholder="Search movie s..."
+      placeholder="Search for movies..."
       value={query}
       onChange={(e) => setQuery(e.target.value)}
     />
@@ -135,6 +135,23 @@ function MovieDetails({ selectedId, onCloseDetails, onAddWatched, watched }) {
     onAddWatched(newWatchedMovie);
     onCloseDetails();
   }
+
+  useEffect(
+    function () {
+      function onCloseEscape(e) {
+        if (e.code === "Escape") {
+          onCloseDetails();
+        }
+      }
+
+      document.addEventListener("keydown", onCloseEscape);
+
+      return function () {
+        document.removeEventListener("keydown", onCloseEscape);
+      };
+    },
+    [onCloseDetails]
+  );
 
   useEffect(
     function () {
@@ -304,7 +321,7 @@ function WatchedMovie({ movie, onDeleteWatched }) {
 
 const API_KEY = "47c60472";
 export default function App() {
-  const [query, setQuery] = useState("inception");
+  const [query, setQuery] = useState("");
   const [movies, setMovies] = useState([]);
   const [watched, setWatched] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -363,6 +380,8 @@ export default function App() {
         setError("");
         return;
       }
+
+      handleCloseDetails();
       fetchMovies();
 
       return function () {
